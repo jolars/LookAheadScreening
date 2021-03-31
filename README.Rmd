@@ -1,0 +1,18 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Code for Look-Ahead Screening Rules Paper
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/jolars/LookAheadScreening/workflows/R-CMD-check/badge.svg)](https://github.com/jolars/HessianScreening/actions)
+<!-- badges: end -->

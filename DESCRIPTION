@@ -1,0 +1,35 @@
+Package: LookAheadScreening
+Title: Safe Look-Ahead Screening for the Lasso
+Version: 0.0.1
+Authors@R:
+    c(person(given = "Johan",
+             family = "Larsson",
+             role = c("aut", "cre"),
+             email = "johan.larsson@stat.lu.se",
+             comment = c(ORCID = "0000-0002-4029-5945")),
+      person(given = "Jonas",
+             family = "Wallin",
+             role = "aut",
+             email = "jonas.wallin@stat.lu.se",
+             comment = c(ORCID = "0000-0003-0381-6593")))
+Description: Procedures to fit the lasso using safe look-ahead screening rules.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: false
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+LinkingTo:
+    Rcpp,
+    RcppArmadillo
+Imports:
+    Rcpp,
+    glmnet,
+    languageserver,
+    devtools,
+    rcmdcheck
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Depends:
+    R (>= 3.5),
+    Matrix (>= 1.3-2)

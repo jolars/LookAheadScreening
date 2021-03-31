@@ -1,0 +1,11 @@
+^renv$
+^renv\.lock$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github$
+^data-raw$
+^results$
+^experiments$
+^coding-benchmarks$
+^figures$
+^tables$
