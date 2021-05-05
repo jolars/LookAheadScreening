@@ -7,55 +7,49 @@
 using namespace Rcpp;
 
 // lassoPathDense
-Rcpp::List lassoPathDense(arma::mat X, arma::vec y, const std::string family, const bool standardize, const std::string screening_type, const arma::uword path_length, const arma::uword maxit, const double tol_infeas, const double tol_gap, const double gamma, const bool force_kkt_check, const bool line_search, const arma::uword verbosity);
-RcppExport SEXP _LookAheadScreening_lassoPathDense(SEXP XSEXP, SEXP ySEXP, SEXP familySEXP, SEXP standardizeSEXP, SEXP screening_typeSEXP, SEXP path_lengthSEXP, SEXP maxitSEXP, SEXP tol_infeasSEXP, SEXP tol_gapSEXP, SEXP gammaSEXP, SEXP force_kkt_checkSEXP, SEXP line_searchSEXP, SEXP verbositySEXP) {
+Rcpp::List lassoPathDense(arma::mat X, arma::vec y, const bool standardize, const std::string screening_type, const arma::uword path_length, const arma::uword maxit, const double tol_infeas, const double tol_gap, const bool force_kkt_check, const arma::uword verbosity);
+RcppExport SEXP _LookAheadScreening_lassoPathDense(SEXP XSEXP, SEXP ySEXP, SEXP standardizeSEXP, SEXP screening_typeSEXP, SEXP path_lengthSEXP, SEXP maxitSEXP, SEXP tol_infeasSEXP, SEXP tol_gapSEXP, SEXP force_kkt_checkSEXP, SEXP verbositySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const std::string >::type family(familySEXP);
     Rcpp::traits::input_parameter< const bool >::type standardize(standardizeSEXP);
     Rcpp::traits::input_parameter< const std::string >::type screening_type(screening_typeSEXP);
     Rcpp::traits::input_parameter< const arma::uword >::type path_length(path_lengthSEXP);
     Rcpp::traits::input_parameter< const arma::uword >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double >::type tol_infeas(tol_infeasSEXP);
     Rcpp::traits::input_parameter< const double >::type tol_gap(tol_gapSEXP);
-    Rcpp::traits::input_parameter< const double >::type gamma(gammaSEXP);
     Rcpp::traits::input_parameter< const bool >::type force_kkt_check(force_kkt_checkSEXP);
-    Rcpp::traits::input_parameter< const bool >::type line_search(line_searchSEXP);
     Rcpp::traits::input_parameter< const arma::uword >::type verbosity(verbositySEXP);
-    rcpp_result_gen = Rcpp::wrap(lassoPathDense(X, y, family, standardize, screening_type, path_length, maxit, tol_infeas, tol_gap, gamma, force_kkt_check, line_search, verbosity));
+    rcpp_result_gen = Rcpp::wrap(lassoPathDense(X, y, standardize, screening_type, path_length, maxit, tol_infeas, tol_gap, force_kkt_check, verbosity));
     return rcpp_result_gen;
 END_RCPP
 }
 // lassoPathSparse
-Rcpp::List lassoPathSparse(arma::sp_mat X, arma::vec y, const std::string family, const bool standardize, const std::string screening_type, const arma::uword path_length, const arma::uword maxit, const double tol_infeas, const double tol_gap, const double gamma, const bool force_kkt_check, const bool line_search, const arma::uword verbosity);
-RcppExport SEXP _LookAheadScreening_lassoPathSparse(SEXP XSEXP, SEXP ySEXP, SEXP familySEXP, SEXP standardizeSEXP, SEXP screening_typeSEXP, SEXP path_lengthSEXP, SEXP maxitSEXP, SEXP tol_infeasSEXP, SEXP tol_gapSEXP, SEXP gammaSEXP, SEXP force_kkt_checkSEXP, SEXP line_searchSEXP, SEXP verbositySEXP) {
+Rcpp::List lassoPathSparse(arma::sp_mat X, arma::vec y, const bool standardize, const std::string screening_type, const arma::uword path_length, const arma::uword maxit, const double tol_infeas, const double tol_gap, const bool force_kkt_check, const arma::uword verbosity);
+RcppExport SEXP _LookAheadScreening_lassoPathSparse(SEXP XSEXP, SEXP ySEXP, SEXP standardizeSEXP, SEXP screening_typeSEXP, SEXP path_lengthSEXP, SEXP maxitSEXP, SEXP tol_infeasSEXP, SEXP tol_gapSEXP, SEXP force_kkt_checkSEXP, SEXP verbositySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::sp_mat >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const std::string >::type family(familySEXP);
     Rcpp::traits::input_parameter< const bool >::type standardize(standardizeSEXP);
     Rcpp::traits::input_parameter< const std::string >::type screening_type(screening_typeSEXP);
     Rcpp::traits::input_parameter< const arma::uword >::type path_length(path_lengthSEXP);
     Rcpp::traits::input_parameter< const arma::uword >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double >::type tol_infeas(tol_infeasSEXP);
     Rcpp::traits::input_parameter< const double >::type tol_gap(tol_gapSEXP);
-    Rcpp::traits::input_parameter< const double >::type gamma(gammaSEXP);
     Rcpp::traits::input_parameter< const bool >::type force_kkt_check(force_kkt_checkSEXP);
-    Rcpp::traits::input_parameter< const bool >::type line_search(line_searchSEXP);
     Rcpp::traits::input_parameter< const arma::uword >::type verbosity(verbositySEXP);
-    rcpp_result_gen = Rcpp::wrap(lassoPathSparse(X, y, family, standardize, screening_type, path_length, maxit, tol_infeas, tol_gap, gamma, force_kkt_check, line_search, verbosity));
+    rcpp_result_gen = Rcpp::wrap(lassoPathSparse(X, y, standardize, screening_type, path_length, maxit, tol_infeas, tol_gap, force_kkt_check, verbosity));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_LookAheadScreening_lassoPathDense", (DL_FUNC) &_LookAheadScreening_lassoPathDense, 13},
-    {"_LookAheadScreening_lassoPathSparse", (DL_FUNC) &_LookAheadScreening_lassoPathSparse, 13},
+    {"_LookAheadScreening_lassoPathDense", (DL_FUNC) &_LookAheadScreening_lassoPathDense, 10},
+    {"_LookAheadScreening_lassoPathSparse", (DL_FUNC) &_LookAheadScreening_lassoPathSparse, 10},
     {NULL, NULL, 0}
 };
 

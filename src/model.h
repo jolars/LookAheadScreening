@@ -166,7 +166,6 @@ public:
     const uword maxit,
     const double tol_gap,
     const double tol_infeas,
-    const bool line_search,
     const uword verbosity)
   {
     const uword p = X.n_cols;
@@ -198,14 +197,14 @@ public:
       updateResidual();
 
       while (it < maxit) {
-        it++;
 
         if (verbosity >= 2) {
-          Rprintf("    iter: %i\n", it);
+          Rprintf("    iter: %i\n", it + 1);
         }
 
-        if (screening_type == "gap_safe" && (it - 1) % screen_interval == 0) {
-          if (it > 1) {
+        if (it % screen_interval == 0 &&
+            !(screening_type == "gap_safe_lookahead" && it == 0)) {
+          if (it > 0) {
             updateLinearPredictor(X, screened_set);
             updateResidual();
           }
@@ -219,10 +218,8 @@ public:
 
           double r_screen{ 0 };
 
-          if (screening_type == "gap_safe") {
-            XTcenter = c / dual_scale;
-            r_screen = safeScreeningRadius(std::max(duality_gap, 0.0), lambda);
-          }
+          XTcenter = c / dual_scale;
+          r_screen = safeScreeningRadius(std::max(duality_gap, 0.0), lambda);
 
           safeScreening(screened, screened_set, X, XTcenter, r_screen);
         }
@@ -238,39 +235,8 @@ public:
             prox(beta_j_old + c(j) / hess_j, lambda / hess_j) - beta(j);
 
           if (v != 0) {
-            if (family == "binomial" && line_search) {
-              // line search (see J. D. Lee, Y. Sun, and M. A. Saunders,
-              // “Proximal Newton-type methods for minimizing composite
-              // functions,” arXiv:1206.1623 [cs, math, stat], Mar. 2014,
-              // Accessed: Jan. 12, 2020. [Online]. Available:
-              // http://arxiv.org/abs/1206.1623)
-
-              double primal_value_old = primal(lambda, screened_set);
-
-              while (true) {
-                double beta_j_prev = beta(j);
-
-                beta(j) = beta_j_old + t(j) * v;
-                adjustResidual(X, j, beta(j) - beta_j_prev);
-
-                primal_value = primal(lambda, screened_set);
-
-                double eta = -c(j) * v + lambda * (std::abs(beta_j_old + v) -
-                                                   std::abs(beta_j_old));
-
-                if (primal_value * (1 - std::sqrt(datum::eps)) <=
-                    primal_value_old + a * t(j) * eta) {
-                  break;
-                } else {
-                  t(j) *= b;
-                }
-
-                Rcpp::checkUserInterrupt();
-              }
-            } else {
-              beta(j) = beta_j_old + v;
-              adjustResidual(X, j, beta(j) - beta_j_old);
-            }
+            beta(j) = beta_j_old + v;
+            adjustResidual(X, j, beta(j) - beta_j_old);
           }
         }
 
@@ -284,6 +250,8 @@ public:
                   primal_value,
                   dual_value,
                   duality_gap / null_primal);
+
+        it++;
 
         if (std::abs(duality_gap) <= tol_gap * null_primal) {
           updateCorrelation(X, screened_set);

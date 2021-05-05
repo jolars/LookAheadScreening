@@ -5,5 +5,5 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/jolars/LookAheadScreening/workflows/R-CMD-check/badge.svg)](https://github.com/jolars/HessianScreening/actions)
+[![R-CMD-check](https://github.com/jolars/LookAheadScreening/workflows/R-CMD-check/badge.svg)](https://github.com/jolars/LookAheadScreening/actions)
 <!-- badges: end -->

@@ -1,4 +1,4 @@
-library(HessianScreening)
+library(LookAheadScreening)
 
 test_that("lambda grid calculations are correct", {
   for (p in c(10, 100)) {
@@ -13,9 +13,7 @@ test_that("lambda grid calculations are correct", {
     X <- scale(X)
     y <- y - mean(y)
 
-    family <- "gaussian"
-
-    res_work <- lassoPath(X, y, family = family)
+    res_work <- lassoPath(X, y)
     res_glmn <- glmnet::glmnet(X, y, intercept = FALSE)
 
     n_lambda <- min(length(res_work$lambda), length(res_glmn$lambda))

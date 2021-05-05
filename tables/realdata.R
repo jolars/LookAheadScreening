@@ -1,10 +1,8 @@
-library(lattice)
 library(tibble)
 library(dplyr)
 library(tidyr)
 library(readr)
 library(forcats)
-library(kableExtra)
 library(stringr)
 
 d_raw <- readRDS("results/realdata.rds")

@@ -7,16 +7,13 @@
 lassoPath(
   X,
   y,
-  family = c("gaussian", "binomial"),
   standardize = TRUE,
-  screening_type = c("working", "edpp", "gap_safe", "strong"),
+  screening_type = c("gap_safe", "gap_safe_lookahead"),
   path_length = 100L,
   maxit = 1e+05,
-  tol_infeas = 0.001,
-  tol_gap = 1e-04,
-  gamma = 0.01,
+  tol_infeas = 1e-04,
+  tol_gap = 1e-05,
   force_kkt_check = FALSE,
-  line_search = TRUE,
   verbosity = 0
 )
 }
@@ -24,8 +21,6 @@ lassoPath(
 \item{X}{The predictor matrix}
 
 \item{y}{The reponse vector}
-
-\item{family}{The name of the family, "gaussian" or "logistic"}
 
 \item{standardize}{Whether to standardize the predictors}
 
@@ -39,12 +34,8 @@ lassoPath(
 
 \item{tol_gap}{Tolerance threshold for duality gap}
 
-\item{gamma}{Percent of strong approximation to add to Hessian approximation}
-
 \item{force_kkt_check}{Whether to force KKT checks even when screening rule
 is safe}
-
-\item{line_search}{Use line search when \code{family = "binomial"}}
 
 \item{verbosity}{Controls the level of verbosity. 0 = no output.}
 }

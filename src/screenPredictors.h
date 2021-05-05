@@ -2,16 +2,20 @@
 
 #include <RcppArmadillo.h>
 
+#include "model.h"
+
 using namespace arma;
 
 template<typename T>
-std::tuple<uvec, uvec>
-screenPredictors(const std::string screening_type,
-                 const uvec& strong,
+void
+screenPredictors(uvec& lookahead,
+                 uvec& screened,
+                 const std::unique_ptr<Model>& model,
+                 const std::string screening_type,
                  const uvec& ever_active,
                  const vec& residual,
-                 const vec& c,
-                 const vec& c_grad,
+                 const vec& corr,
+                 const vec& corr_grad,
                  const T& X,
                  const vec& X_norms_squared,
                  const vec& X_mean_scaled,
@@ -19,64 +23,72 @@ screenPredictors(const std::string screening_type,
                  const vec& lambdas,
                  const double lambda,
                  const double lambda_next,
-                 const double gamma,
                  const uword step,
                  const bool standardize)
 {
-  uvec screened(X.n_cols);
-  uvec lookahead(X.n_cols, fill::zeros);
-  lookahead.fill(100);
+  uvec screened_set = find(screened);
+  uword p = X.n_cols;
 
-  if (screening_type == "working") {
-    screened = ever_active;
-  } else if (screening_type == "strong") {
-    screened = strong;
-  } else if (screening_type == "hessian" ||
-             screening_type == "hessian_adaptive") {
-    vec c_pred = c + c_grad * (lambda_next - lambda);
-    screened = (abs(c_pred) + gamma * (lambda - lambda_next) > lambda_next) ||
-               ever_active;
-  } else if (screening_type == "gap_safe") {
-    // we use the active set strategy for the gap safe rules, so we use the
-    // ever-active predictors to get a good warm start
-    screened = ever_active;
-  } else if (screening_type == "edpp") {
-    double dual_scale = std::max(lambda, max(abs(c)));
-    vec v1 = y / lambda - residual / dual_scale;
-    vec v2 = y / lambda_next - residual / dual_scale;
+  if (screening_type == "gap_safe") {
+    screened.fill(true);
+  } else if (screening_type == "gap_safe_lookahead") {
+    // create dual feasible point
+    double dual_scale = std::max(lambda, max(abs(corr)));
+    vec theta = residual / dual_scale;
 
-    double norm_v1 = std::pow(norm(v1), 2);
-    vec v_orth = norm_v1 != 0 ? v2 - v1 * dot(v1, v2) / norm_v1 : v2;
-    vec center = residual / dual_scale + 0.5 * v_orth;
-    double r_screen = 0.5 * norm(v_orth);
+    double theta_dot_y = dot(theta, y);
+    double theta_dot_theta = dot(theta, theta);
+    double beta_norm1 = norm(model->beta, 1);
+    double residual_sq_norm2 = std::pow(norm(residual), 2);
 
-    vec XTcenter = matTransposeMultiply(X, center, X_mean_scaled, standardize);
+    for (uword j = 0; j < p; ++j) {
+      if (ever_active(j) || lookahead(j) >= step)
+        continue;
 
-    screened = r_screen * sqrt(X_norms_squared) + abs(XTcenter) >= 1;
+      double a = std::pow(1 - std::abs(corr(j) / dual_scale), 2) -
+                 0.5 * theta_dot_theta * X_norms_squared(j);
+      double b = X_norms_squared(j) * (theta_dot_y - beta_norm1);
+      double c = -0.5 * residual_sq_norm2 * X_norms_squared(j);
 
-    for (uword i = step; i < lambdas.n_elem; ++i) {
-      if (lambdas[i] < lambda) {
-        vec v1 = y / lambda - residual / dual_scale;
-        vec v2 = y / lambdas[i] - residual / dual_scale;
+      double lambda_star1 = (-b + std::sqrt(b * b - 4 * a * c)) / (2 * a);
+      double lambda_star2 = (-b - std::sqrt(b * b - 4 * a * c)) / (2 * a);
 
-        double norm_v1 = std::pow(norm(v1), 2);
-        vec v_orth = norm_v1 != 0 ? v2 - v1 * dot(v1, v2) / norm_v1 : v2;
-        vec center = residual / dual_scale + 0.5 * v_orth;
-        double r_screen = 0.5 * norm(v_orth);
+      // Rcpp::Rcout << "a = " << a << ", b = " << b << ", c = " << c
+      //             << ",lambda_star1: " << lambda_star1
+      //             << ", lambda_star2: " << lambda_star2 << std::endl;
 
-        vec XTcenter =
-          matTransposeMultiply(X, center, X_mean_scaled, standardize);
+      uvec tmp = lambdas > lambda_star1 && lambdas < lambda;
 
-        uvec scr = r_screen * sqrt(X_norms_squared) + abs(XTcenter) >= 1;
-
-        for (uword j = 0; j < X.n_cols; ++j) {
-          if (scr[j]) {
-            lookahead[j] = std::min(lookahead[j], i);
-          }
-        }
+      if (any(tmp)) {
+        lookahead(j) = as_scalar(find(tmp, 1, "last"));
+      } else {
+        lookahead(j) = 0;
       }
     }
-  }
 
-  return { screened, lookahead };
+    // for (uword i = step; i < lambdas.n_elem; ++i) {
+    //   if (lambdas(i) < lambda) {
+    //     screened.ones();
+    //     screened_set = find(screened);
+
+    //     double primal_value = model->primal(lambdas(i), screened_set);
+    //     double dual_value = model->scaledDual(lambdas(i));
+    //     double duality_gap = primal_value - dual_value;
+
+    //     vec XTcenter = corr / dual_scale;
+    //     double r_screen =
+    //       model->safeScreeningRadius(std::max(duality_gap, 0.0), lambdas(i));
+
+    //     model->safeScreening(screened, screened_set, X, XTcenter, r_screen);
+
+    //     for (uword j = 0; j < X.n_cols; ++j) {
+    //       if (screened(j)) {
+    //         lookahead(j) = std::min(lookahead(j), i);
+    //       }
+    //     }
+    //   }
+    // }
+
+    screened = lookahead < (step) || ever_active;
+  }
 }

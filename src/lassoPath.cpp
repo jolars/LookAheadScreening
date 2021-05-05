@@ -3,7 +3,6 @@
 #include "setupModel.h"
 #include "model.h"
 #include "colNormsSquared.h"
-#include "binomial.h"
 #include "gaussian.h"
 #include "checkStoppingConditions.h"
 #include "kktCheck.h"
@@ -18,33 +17,17 @@ template<typename T>
 Rcpp::List
 lassoPath(T& X,
           vec& y,
-          const std::string family,
           const bool standardize,
           const std::string screening_type,
           const uword path_length,
           const uword maxit,
           const double tol_infeas,
           const double tol_gap,
-          const double gamma,
           const bool force_kkt_check,
-          const bool line_search,
           const uword verbosity)
 {
   const uword n = X.n_rows;
   const uword p = X.n_cols;
-
-  if (family == "binomial") {
-    vec y_unique = sort(unique(y));
-
-    if (y_unique.n_elem != 2) {
-      Rcpp::stop("y has more than two unique values");
-    } else if (y_unique(0) != 0 || y_unique(1) != 1) {
-      Rcpp::stop("y is not in {0, 1}");
-    }
-
-    if (screening_type == "edpp")
-      Rcpp::stop("EDPP cannot be used in logistic regression");
-  }
 
   umat lookaheads(X.n_cols, 0);
 
@@ -75,7 +58,7 @@ lassoPath(T& X,
     X_norms_squared.fill(n);
   }
 
-  auto model = setupModel(family,
+  auto model = setupModel("gaussian",
                           y,
                           beta,
                           residual,
@@ -88,7 +71,6 @@ lassoPath(T& X,
                           standardize);
 
   model->standardizeY();
-
   model->updateResidual();
   model->updateCorrelation(X, regspace<uvec>(0, p - 1));
 
@@ -111,7 +93,6 @@ lassoPath(T& X,
   std::vector<uword> n_passes;
   std::vector<uword> n_refits;
   std::vector<double> n_screened;
-  std::vector<uword> n_strong;
   std::vector<uword> n_violations;
 
   uvec active(p, fill::zeros);
@@ -123,8 +104,8 @@ lassoPath(T& X,
   uvec active_prev = active;
   uvec ever_active = active;
   uvec screened = active;
-  uvec strong = active;
-  uvec strong_set = find(strong);
+
+  uvec lookahead(p, fill::zeros);
 
   uvec violations(p, fill::zeros);
 
@@ -178,12 +159,15 @@ lassoPath(T& X,
 
       double t0 = timer.toc();
 
-      if (first_run && screening_type != "gap_safe") {
-        n_screened.emplace_back(sum(screened));
-      }
+      // if (first_run && screening_type != "gap_safe" &&
+      //     screening_type != "gap_safe_lookahead") {
+      //   n_screened.emplace_back(sum(screened));
+      // }
+
+      uvec tmp_screened = first_run ? ever_active : screened;
 
       auto [primal_value, dual_value, duality_gap, n_passes_i, avg_screened] =
-        model->fit(screened,
+        model->fit(tmp_screened,
                    X,
                    X_norms_squared,
                    lambda,
@@ -195,44 +179,28 @@ lassoPath(T& X,
                    maxit,
                    tol_gap,
                    tol_infeas,
-                   line_search,
                    verbosity);
 
       cd_time += timer.toc() - t0;
 
       n_passes_i_sum += n_passes_i;
 
-      if (screening_type == "gap_safe" && !first_run) {
+      if (!first_run) {
         n_screened.push_back(avg_screened);
       }
 
       t0 = timer.toc();
 
-      if (check_kkt && !(screening_type == "gap_safe" && first_run)) {
-        uvec unscreened_set = find(screened == false);
-
+      if (check_kkt && !first_run) {
         violations.fill(false);
-
-        if (screening_type == "strong" || screening_type == "edpp") {
-          model->updateCorrelation(X, unscreened_set);
-          kktCheck(violations, screened, c, unscreened_set, lambda);
-
-        } else {
-          uvec check_set = setIntersect(unscreened_set, strong_set);
-          model->updateCorrelation(X, check_set);
-          kktCheck(violations, screened, c, check_set, lambda);
-
-          if (!any(violations)) {
-            uvec check_set = setDiff(unscreened_set, strong_set);
-            model->updateCorrelation(X, check_set);
-            kktCheck(violations, screened, c, check_set, lambda);
-          }
-        }
+        uvec check_set = find(tmp_screened == false);
+        model->updateCorrelation(X, check_set);
+        kktCheck(violations, screened, c, check_set, lambda);
       }
 
       n_violations_i += sum(violations);
 
-      if (!any(violations) && !(screening_type == "gap_safe" && first_run)) {
+      if (!any(violations) && !first_run) {
         duals.emplace_back(dual_value);
         primals.emplace_back(primal_value);
         n_passes.emplace_back(n_passes_i_sum);
@@ -292,26 +260,23 @@ lassoPath(T& X,
 
     double lambda_next = lambdas(i);
 
-    strong = abs(c) >= 2 * lambda_next - lambda;
-    strong_set = find(strong);
-    n_strong.emplace_back(sum(strong));
-
-    auto [screened, lookahead] = screenPredictors(screening_type,
-                                                  strong,
-                                                  ever_active,
-                                                  residual,
-                                                  c,
-                                                  c_grad,
-                                                  X,
-                                                  X_norms_squared,
-                                                  X_mean_scaled,
-                                                  y,
-                                                  lambdas,
-                                                  lambda,
-                                                  lambda_next,
-                                                  gamma,
-                                                  i,
-                                                  standardize);
+    screenPredictors(lookahead,
+                     screened,
+                     model,
+                     screening_type,
+                     ever_active,
+                     residual,
+                     c,
+                     c_grad,
+                     X,
+                     X_norms_squared,
+                     X_mean_scaled,
+                     y,
+                     lambdas,
+                     lambda,
+                     lambda_next,
+                     i,
+                     standardize);
 
     lookaheads.insert_cols(lookaheads.n_cols, lookahead);
 
@@ -349,30 +314,24 @@ lassoPath(T& X,
 Rcpp::List
 lassoPathDense(arma::mat X,
                arma::vec y,
-               const std::string family,
                const bool standardize,
                const std::string screening_type,
                const arma::uword path_length,
                const arma::uword maxit,
                const double tol_infeas,
                const double tol_gap,
-               const double gamma,
                const bool force_kkt_check,
-               const bool line_search,
                const arma::uword verbosity)
 {
   return lassoPath(X,
                    y,
-                   family,
                    standardize,
                    screening_type,
                    path_length,
                    maxit,
                    tol_infeas,
                    tol_gap,
-                   gamma,
                    force_kkt_check,
-                   line_search,
                    verbosity);
 }
 
@@ -380,29 +339,23 @@ lassoPathDense(arma::mat X,
 Rcpp::List
 lassoPathSparse(arma::sp_mat X,
                 arma::vec y,
-                const std::string family,
                 const bool standardize,
                 const std::string screening_type,
                 const arma::uword path_length,
                 const arma::uword maxit,
                 const double tol_infeas,
                 const double tol_gap,
-                const double gamma,
                 const bool force_kkt_check,
-                const bool line_search,
                 const arma::uword verbosity)
 {
   return lassoPath(X,
                    y,
-                   family,
                    standardize,
                    screening_type,
                    path_length,
                    maxit,
                    tol_infeas,
                    tol_gap,
-                   gamma,
                    force_kkt_check,
-                   line_search,
                    verbosity);
 }

@@ -1,0 +1,258 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%% Template for EYSM 2021 submissions %%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Please save the file as your name.
+% Please, do not change any definitions.
+
+\documentclass[b5paper,10pt,abstractoff,DIV=calc,headings=normal,twoside]{scrartcl}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,graphicx,etoolbox,scrlayer-scrpage}
+\usepackage[noblocks]{authblk}
+\makeatletter
+\patchcmd{\@maketitle}{\huge}{\Large}{}{}
+\patchcmd{\abstract}{\quotation}{}{}{}
+\AtBeginEnvironment{abstract}{\noindent\ignorespaces}
+\AtEndEnvironment{abstract}{\par\mbox{}}
+\newcommand{\shortauthor}{}
+\newcommand{\shorttitle}{\@title}
+\makeatother
+\setkomafont{author}{\small}
+\setkomafont{title}{\rmfamily\bfseries}
+\setkomafont{disposition}{\rmfamily\bfseries}
+\renewcommand\Authfont{\bfseries}\renewcommand\Affilfont{\mdseries\slshape}
+\def\AMS#1{\par\noindent \textbf{AMS subject classification: }#1\par}
+\newcommand{\acknowledgements}{\par\mbox{}\par\noindent\textbf{Acknowledgements: }}
+\newcommand{\keywords}[1]{\par\noindent\textbf{Keywords: }#1}
+% \newcommand{\AMS}[1]{\par\noindent\textbf{AMS subject classification: }#1}
+%\newcommand{\AMS}[1]{}
+%\subject{\vspace{-2\baselineskip}}\date{\vspace{-2\baselineskip%}}
+\renewcommand*{\titlepagestyle}{plain.scrheadings}\pagestyle{scrheadings}
+\rehead[]{\shortauthor}\lohead[]{\shorttitle}\lehead[]{PPP}\rohead[]{PPP}
+\cfoot[]{}\ofoot[]{}\ifoot[]{}\recalctypearea
+\interfootnotelinepenalty=10000
+%\usepackage{lipsum} %% generates dummy text
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% Available theorem environments %%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{conjecture}{Conjecture}
+\theoremstyle{remark}
+\newtheorem*{note}{Note}
+\newtheorem{remark}{Remark}
+
+\renewenvironment{abstract}{\bigskip\noindent\begin{minipage}{\textwidth}\setlength{\parindent}{15pt}\paragraph{Abstract:}}{\end{minipage}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%% Do not modify prior to this point %%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage{mathtools}
+\usepackage[colorlinks]{hyperref}
+\usepackage{url}
+\usepackage[numbers]{natbib}
+\bibliographystyle{abbrvnat}
+
+% math operators
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\sign}{sign}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% Please make sure to leave space for page numbers             %%%%%%%%%
+%%%%%%%%% There is a placeholder PPP generated in the document to help %%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\shortauthor}{J. Larsson}
+\renewcommand{\shorttitle}{Look-Ahead Screening Rules for the Lasso}
+
+\title{Look-Ahead Screening Rules for the Lasso}
+
+\author[1]{Johan Larsson%
+  \thanks{%
+    \href{mailto:johan.larsson@stat.lu.se}{\url{johan.larsson@stat.lu.se}}
+  }%
+}
+\affil[1]{The Department of Statistics, Lund University}
+
+\maketitle
+
+\begin{abstract}
+  The lasso is a popular method for inducing shrinkage and sparsity in the
+  solution vector (coefficients) of regression problems, particularly when
+  the number of predictors far outnumber the number of observations. Solving
+  the lasso for high-dimensional data can, however, be computationally
+  demanding. Fortunately, this computational load can be alleviated via the
+  use of \emph{screening rules}, which screen and discard predictors prior to
+  fitting the model, leading a reduced problem to be solved. Screening rules
+  are particularly effective when fitting a full regularization path: a
+  sequence of models with decreasing penalization. Screening rules can be
+  safe or heuristic. Safe rules certify that discarded predictors are not in
+  the solution; heuristic ones do not. Existing screening rules typically
+  work sequentially or dynamically. Sequential rules screen predictors for
+  the next model along the regularization path, whereas dynamical rules
+  screen during optimization of the current model. There has, however,
+  previously been no attempts to design screening rules that screen further
+  along the path.
+
+  In this paper, we present a new screening strategy: \emph{look-ahead}
+  screening rules. Our method uses safe screening rules to find a range of
+  penalty values for which a given predictor cannot enter the model, thereby
+  screening predictors along the remainder of the path. Our screening rules
+  lead to reductions in the time required for screening and also applies to
+  heuristic rules, for which the time required to conduct checks of the
+  optimality conditions to guard against violations of the rules is reduced.
+  In experiments we show that these look-ahead screening rules improve the
+  performance of existing screening strategies and that the additional cost
+  of screening ahead on the path is marginal.
+\end{abstract}
+
+\keywords{lasso, sparse regression, screening rules, safe screening rules}
+
+\smallskip
+
+\AMS{62J07}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+\section{Preliminaries}%
+\label{sec:preliminaries}
+
+Starting with the preliminaries of our problem, we take \(X \in \mathbb{R}^{n
+  \times p}\) be the design matrix of \(n\) observations and \(p\) predictors
+and \(y \in \mathbb{R}^n\) the response vector.
+
+The lasso is represented by the following convex optimization problem:
+\begin{equation}
+  \label{eq:primal}
+  \operatorname*{minimize}_{\beta \in \mathbb{R}^p} P(\beta; \lambda)
+\end{equation}
+where
+\begin{equation}
+  P(\beta; \lambda) =
+  \frac 1 2 \lVert y - X\beta \rVert_2^2 + \lambda \lVert \beta \rVert_1
+\end{equation}
+is the \emph{primal} objective. We let \(\hat \beta_\lambda\) be the solution to
+\eqref{eq:primal} for a given \(\lambda\). In addition, we also let \(\tilde
+\beta_\lambda\) be a numerical approximation to \(\hat\beta_\lambda\)
+returned by an algorithm
+tasked with solving \eqref{eq:primal}.
+
+The Karush--Kuhn--Tucker (KKT) stationarity condition for \eqref{eq:primal}
+holds that
+\begin{equation}
+  \label{eq:stationarity}
+  0 \in X^T(X\beta - y) + \lambda\partial,
+\end{equation}
+where \(\partial\) is the subdifferential of the \(\ell_1\)-norm, with
+its \(j\)th element corresponding to
+\begin{equation}
+  \label{eq:subdifferential}
+  \partial_j \in
+  \begin{cases}
+    \{\sign(\beta_j)\} & \text{if } \beta_j \neq 0 \\
+    [-1,1]             & \text{otherwise.}
+  \end{cases}
+\end{equation}
+Moreover, we define the dual problem of \eqref{eq:primal} as
+\begin{equation}
+  \label{eq:dual}
+  \operatorname*{maximize}_{\theta \in \mathbb{R}^n} D(\theta; \lambda)
+\end{equation}
+where
+\begin{equation}
+  D(\theta) = \frac 12 y^T y - \frac{\lambda^2}{2} \left\lVert \theta
+  - \frac y \lambda \right\rVert_2^2
+\end{equation}
+is the \emph{dual} objective.
+The relationship between the primal and dual problems is given by
+\[
+  y = X\hat\beta_\lambda + \lambda \hat\theta_\lambda.
+\]
+Next, we let \(G\) be the so-called \emph{duality gap}, which we define
+as
+\begin{equation}
+  \begin{aligned}
+    G(\beta, \theta; \lambda)
+     & = P(\beta; \lambda) - D(\theta; \lambda)                                                 \\
+     & = \frac 12 \lVert y - X\beta\rVert_2^2 + \lambda \lVert \beta \rVert_1
+    - \frac 12 y^T y + \frac{\lambda^2}{2} \left\lVert \theta - \frac y \theta \right\rVert_2^2 \\
+     & =
+    \frac 12 \lVert y - X\beta\rVert_2^2 + \lambda \lVert \beta \rVert_1
+    - \lambda \theta^T y + \frac{\lambda^2}{2} \theta^T \theta.
+  \end{aligned}
+\end{equation}
+In the case of the lasso, strong duality holds, which means that
+\(G(\tilde\beta_\lambda, \tilde\theta_\lambda; \lambda) = 0\) for any
+choice of \(\lambda\).
+
+Suppose, now, that we have solved the lasso for \(\lambda\); then
+for any given \(\lambda^* \geq \lambda\),
+the Gap Safe rule~\citep{ndiaye2017} for the lasso discards the \(j\)th
+predictor if
+\begin{equation}
+  \label{eq:gap-safe-rule}
+  |X^T \tilde \theta_\lambda|_j + \lVert x_j\rVert_2
+  \sqrt{\frac{1}{\lambda_*^2}
+    G(\tilde \beta_\lambda, \tilde \theta_\lambda; \lambda^*)}
+  < 1
+\end{equation}
+where
+\[
+  \tilde\theta_\lambda = \frac{y - X\tilde\beta_\lambda}{
+    \max\big( \max_j|x_j^T(y - X\tilde\beta_\lambda)|, \lambda\big)}
+\]
+is a dual-feasible point~\cite{ndiaye2017}, which we can always obtain
+by dual scaling whenever a candidate is infeasible. Using these facts,
+we now arrive at \autoref{thm:look-ahead}, which is the main result of
+this paper.
+
+\begin{theorem}
+  \label{thm:look-ahead}
+  Let
+  \((\tilde\beta_\lambda,\tilde\theta_\lambda)\) be
+  a feasible primal--dual point for the solution to
+  \eqref{eq:primal} and \eqref{eq:dual}. Then
+  \(\big(\hat\beta_{\lambda^*}\big)_j = 0\) for any
+  \[
+    \lambda_* > \frac{-b + \sqrt{b^2 - 4ac}}{2a}
+  \]
+  where
+  \[
+    \begin{aligned}
+      a & = \big( 1 - | x_j^T \tilde\theta_\lambda|\big)^2 -
+      \frac 12 \tilde\theta_\lambda^T \tilde\theta_\lambda \lVert x_j\rVert_2^2      \\
+      b & = \big(\tilde\theta_\lambda^T y - \lVert \tilde\beta_\lambda \rVert_1\big)
+      \lVert x_j \rVert_2^2                                                          \\
+      c & = - \frac 12 \lVert y - X\tilde\beta_\lambda\rVert_2^2
+      \lVert x_j\rVert_2^2.                                                          \\
+    \end{aligned}
+  \]
+\end{theorem}
+\begin{proof}
+
+\end{proof}
+
+Note that there must be some \(\lambda_*^2\), for which it holds that
+\[
+  |X^T \tilde \theta_\lambda|_j +
+  \lVert x_j\rVert_2 \sqrt{\frac{1}{\lambda_*^2} G(\tilde \beta_\lambda, \tilde \theta_\lambda; \lambda^*)}
+  = 1
+\]
+
+\acknowledgements{Your acknowledgements.}
+
+\bibliography{LookAheadScreening.bib}
+
+\end{document}

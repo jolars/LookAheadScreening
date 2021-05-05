@@ -3,7 +3,6 @@
 #include <RcppArmadillo.h>
 
 #include "model.h"
-#include "binomial.h"
 #include "gaussian.h"
 
 using namespace arma;
@@ -21,19 +20,6 @@ setupModel(const std::string family,
            const uword p,
            const bool standardize)
 {
-  if (family == "binomial")
-    return std::make_unique<Binomial>(family,
-                                      y,
-                                      beta,
-                                      residual,
-                                      Xbeta,
-                                      c,
-                                      X_mean_scaled,
-                                      X_norms_squared,
-                                      n,
-                                      p,
-                                      standardize);
-
   return std::make_unique<Gaussian>(family,
                                     y,
                                     beta,
