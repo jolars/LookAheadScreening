@@ -9,6 +9,7 @@ using namespace arma;
 template<typename T>
 void
 screenPredictors(uvec& lookahead,
+                 uvec& lookahead_disabled,
                  uvec& screened,
                  const std::unique_ptr<Model>& model,
                  const std::string screening_type,
@@ -42,7 +43,7 @@ screenPredictors(uvec& lookahead,
     double residual_sq_norm2 = std::pow(norm(residual), 2);
 
     for (uword j = 0; j < p; ++j) {
-      if (ever_active(j) || lookahead(j) >= step)
+      if (ever_active(j) || lookahead(j) > step || lookahead_disabled(j))
         continue;
 
       double a = std::pow(1 - std::abs(corr(j) / dual_scale), 2) -
@@ -62,7 +63,9 @@ screenPredictors(uvec& lookahead,
       if (any(tmp)) {
         lookahead(j) = as_scalar(find(tmp, 1, "last"));
       } else {
+        // stop considering predictors that are not captured by the rule
         lookahead(j) = 0;
+        lookahead_disabled(j) = true;
       }
     }
 
@@ -89,6 +92,6 @@ screenPredictors(uvec& lookahead,
     //   }
     // }
 
-    screened = lookahead < (step) || ever_active;
+    screened = lookahead <= step || ever_active;
   }
 }

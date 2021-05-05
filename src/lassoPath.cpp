@@ -106,6 +106,7 @@ lassoPath(T& X,
   uvec screened = active;
 
   uvec lookahead(p, fill::zeros);
+  uvec lookahead_disabled(p, fill::zeros);
 
   uvec violations(p, fill::zeros);
 
@@ -133,14 +134,12 @@ lassoPath(T& X,
   uword i = 0;
 
   while (true) {
-    i++;
-
-    lambda = lambdas(i - 1);
+    lambda = lambdas(i);
 
     double it_time = timer.toc();
 
     if (verbosity >= 1) {
-      Rprintf("step: %i, lambda: %.2f\n", i, lambda);
+      Rprintf("step: %i, lambda: %.2f\n", i + 1, lambda);
     }
 
     vec beta_prev = beta;
@@ -175,7 +174,6 @@ lassoPath(T& X,
                    null_primal,
                    screening_type,
                    first_run,
-                   i,
                    maxit,
                    tol_gap,
                    tol_infeas,
@@ -218,7 +216,7 @@ lassoPath(T& X,
       Rcpp::checkUserInterrupt();
     }
 
-    if (i > 1) {
+    if (i > 0) {
       active = beta != 0;
       active_set = find(active);
       s.zeros();
@@ -240,7 +238,7 @@ lassoPath(T& X,
       Rprintf("  active: %i, new active: %i\n", active_set.n_elem, new_active);
     }
 
-    bool stop_path = checkStoppingConditions(i,
+    bool stop_path = checkStoppingConditions(i + 1,
                                              n,
                                              p,
                                              path_length,
@@ -258,9 +256,10 @@ lassoPath(T& X,
       break;
     }
 
-    double lambda_next = lambdas(i);
+    double lambda_next = lambdas(i + 1);
 
     screenPredictors(lookahead,
+                     lookahead_disabled,
                      screened,
                      model,
                      screening_type,
@@ -286,6 +285,8 @@ lassoPath(T& X,
     it_times.emplace_back(timer.toc() - it_time);
 
     Rcpp::checkUserInterrupt();
+
+    ++i;
   }
 
   rescaleCoefficients(betas, X_mean, X_sd, y_center);

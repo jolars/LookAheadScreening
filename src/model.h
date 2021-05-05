@@ -162,7 +162,6 @@ public:
     const double null_primal,
     const std::string screening_type,
     const bool first_run,
-    const uword step,
     const uword maxit,
     const double tol_gap,
     const double tol_infeas,
@@ -179,13 +178,7 @@ public:
     double dual_value = dual();
     double duality_gap = primal_value - dual_value;
 
-    // line search parameters
-    const double a = 0.1;
-    const double b = 0.5;
-
     vec XTcenter(p);
-
-    vec t(p, fill::ones); // learning rates
 
     const uword screen_interval = 10;
 
@@ -197,7 +190,6 @@ public:
       updateResidual();
 
       while (it < maxit) {
-
         if (verbosity >= 2) {
           Rprintf("    iter: %i\n", it + 1);
         }
