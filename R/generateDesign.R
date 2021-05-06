@@ -16,14 +16,12 @@
 #' @export
 generateDesign <- function(n,
                            p,
-                           family = c("gaussian", "binomial"),
                            density = 1,
                            rho = 0,
                            s = 5,
                            rho_type = c("constant", "auto"),
                            beta_type = 1,
                            snr = 2) {
-  family <- match.arg(family)
   rho_type <- match.arg(rho_type)
 
   s <- min(s, p)
@@ -61,19 +59,15 @@ generateDesign <- function(n,
       sigma <- sqrt((t(beta) %*% Sigma %*% beta) / snr)
     } else if (rho_type == "constant") {
       X <- matrix(rnorm(n), n, p) * sqrt(rho) +
-        sqrt(1 - rho) * matrix(rnorm(n*p), n, p)
+        sqrt(1 - rho) * matrix(rnorm(n * p), n, p)
       sigma <- sqrt((rho * sum(beta)^2 + (1 - rho) * sum(beta^2)) / snr)
     }
   } else {
-    Sigma <- diag(p)
+    Sigma <- Matrix::Diagonal(p)
     sigma <- sqrt((t(beta) %*% Sigma %*% beta) / snr)
   }
 
   y <- as.vector(X %*% beta) + as.vector(sigma) * rnorm(n)
-
-  if (family == "binomial") {
-    y <- (sign(y) + 1) / 2
-  }
 
   list(X = X, y = y)
 }

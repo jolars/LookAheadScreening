@@ -7,7 +7,6 @@
 generateDesign(
   n,
   p,
-  family = c("gaussian", "binomial"),
   density = 1,
   rho = 0,
   s = 5,
@@ -20,8 +19,6 @@ generateDesign(
 \item{n}{Number of observations}
 
 \item{p}{Number of predictors}
-
-\item{family}{Response type}
 
 \item{density}{Density of design matrix}
 
@@ -36,6 +33,8 @@ correlation between all predictors. \code{"auto"} means that predictors are
 \item{beta_type}{Type of coefficients to generate}
 
 \item{snr}{Signal-to-noise ratio}
+
+\item{family}{Response type}
 }
 \value{
 A list with \code{X}: the design matrix, and \code{y}: the response.

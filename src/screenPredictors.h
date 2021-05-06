@@ -27,7 +27,6 @@ screenPredictors(uvec& lookahead,
                  const uword step,
                  const bool standardize)
 {
-  uvec screened_set = find(screened);
   uword p = X.n_cols;
 
   if (screening_type == "gap_safe") {

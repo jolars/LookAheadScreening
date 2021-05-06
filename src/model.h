@@ -194,8 +194,7 @@ public:
           Rprintf("    iter: %i\n", it + 1);
         }
 
-        if (it % screen_interval == 0 &&
-            !(screening_type == "gap_safe_lookahead" && it == 0)) {
+        if (it % screen_interval == 0) {
           if (it > 0) {
             updateLinearPredictor(X, screened_set);
             updateResidual();

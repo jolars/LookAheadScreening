@@ -1,6 +1,6 @@
 library(LookAheadScreening)
-#library(tibble)
-#library(dplyr)
+# library(tibble)
+# library(dplyr)
 library(tidyr)
 library(readr)
 
@@ -8,12 +8,11 @@ printf <- function(...) invisible(cat(sprintf(...)))
 
 g <- expand_grid(
   n = 100,
-  p = 20000,
-  snr = 3,
-  s = 10,
-  rho = c(0, 0.4, 0.8),
+  p = 50000,
+  snr = c(0.1, 1, 6),
+  s = c(10),
   screening_type = c("gap_safe", "gap_safe_lookahead"),
-  path_length = 100,
+  path_length = c(100),
   avg_screened = NA,
   time = list(NA),
   screened = list(NA),
@@ -21,10 +20,9 @@ g <- expand_grid(
   step = list(NA)
 )
 
-n_it <- 2
+n_it <- 3
 
 for (i in seq_len(nrow(g))) {
-  rho <- g$rho[i]
   screening_type <- g$screening_type[i]
   path_length <- g$path_length[i]
 
@@ -37,14 +35,14 @@ for (i in seq_len(nrow(g))) {
   active <- screened <- matrix(NA, nrow = n_it, ncol = path_length)
 
   printf(
-    "%02d/%i n: %4d p: %4d rho: %1.1f %-10s\n",
-    i, nrow(g), n, p, rho, screening_type
+    "%02d/%i n: %4d p: %4d snr: %.1f %-10s\n",
+    i, nrow(g), n, p, snr, screening_type
   )
 
   for (j in seq_len(n_it)) {
     set.seed(j)
 
-    d <- generateDesign(n, p, family = "gaussian", rho = rho, snr = snr)
+    d <- generateDesign(n, p, snr = snr)
     X <- d$X
     y <- d$y
 
@@ -90,5 +88,11 @@ for (i in seq_len(nrow(g))) {
   g$active[i] <- list(active)
   g$step[i] <- list(1:path_length)
 }
+
+library(dplyr)
+
+unnest(g, time) %>%
+  group_by(snr, path_length, screening_type) %>%
+  summarize(mean_time = mean(time))
 
 save_rds(g, "results/simulateddata.rds")

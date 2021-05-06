@@ -1,12 +1,11 @@
 library(LookAheadScreening)
 
-d <- readRDS(file.path("data", paste0("e2006-tfidf-test", ".rds")))
-#d <- generateDesign(100, 10000, s = 10)
+# d <- readRDS(file.path("data", paste0("e2006-tfidf-test", ".rds")))
+d <- generateDesign(100, 50000, s = 5, density = 1)
 X <- d$X
 y <- d$y
 n <- nrow(X)
 p <- ncol(X)
-family <- "gaussian"
 tol_gap <- 1e-5
 tol_infeas <- 1e-4
 
@@ -15,7 +14,7 @@ fit <- lassoPath(
     y,
     screening_type = "gap_safe",
     standardize = TRUE,
-    verbosity = 1,
+    verbosity = 0,
     tol_gap = tol_gap,
     tol_infeas = tol_infeas,
     path_length = 100
@@ -27,7 +26,7 @@ fit_lookahead <- lassoPath(
     screening_type = "gap_safe_lookahead",
     force_kkt_check = FALSE,
     standardize = TRUE,
-    verbosity = 1,
+    verbosity = 0,
     tol_gap = tol_gap,
     tol_infeas = tol_infeas,
     path_length = 100
