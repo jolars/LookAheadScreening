@@ -1,6 +1,4 @@
 library(LookAheadScreening)
-# library(tibble)
-# library(dplyr)
 library(tidyr)
 library(readr)
 
@@ -20,7 +18,7 @@ g <- expand_grid(
   step = list(NA)
 )
 
-n_it <- 3
+n_it <- 20
 
 for (i in seq_len(nrow(g))) {
   screening_type <- g$screening_type[i]
@@ -60,14 +58,14 @@ for (i in seq_len(nrow(g))) {
     screened[j, 1:n_lambda] <- fit$screened
     active[j, 1:n_lambda] <- fit$active
 
-    # # stop if standard error is within +- % of mean
-    # if (j > 9) {
-    #   time_se <- sd(time[1:j]) / sqrt(j)
+    # stop if standard error is within +- % of mean
+    if (j > 9) {
+      time_se <- sd(time[1:j]) / sqrt(j)
 
-    #   if (time_se / mean(time[1:j]) < 0.025) {
-    #     break
-    #   }
-    # }
+      if (time_se / mean(time[1:j]) < 0.025) {
+        break
+      }
+    }
   }
 
   time <- time[1:j]
@@ -89,10 +87,10 @@ for (i in seq_len(nrow(g))) {
   g$step[i] <- list(1:path_length)
 }
 
-library(dplyr)
+# library(dplyr)
 
-unnest(g, time) %>%
-  group_by(snr, path_length, screening_type) %>%
-  summarize(mean_time = mean(time))
+# unnest(g, time) %>%
+#   group_by(snr, path_length, screening_type) %>%
+#   summarize(mean_time = mean(time))
 
 save_rds(g, "results/simulateddata.rds")
