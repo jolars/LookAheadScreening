@@ -8,7 +8,7 @@ library(readr)
 printf <- function(...) invisible(cat(sprintf(...)))
 
 datasets <- c(
-  # region "e2006-tfidf-train",
+  # "e2006-tfidf-train",
   # "e2006-log1p-train",
   "arcene",
   "colon-cancer",
@@ -61,7 +61,7 @@ for (i in seq_len(nrow(g))) {
     time[k] <- fit$full_time
 
     # stop if standard error is within 2.5% of mean
-    if (k > 1) {
+    if (k > 3) {
       time_se <- sd(time[1:k]) / sqrt(k)
 
       if (time_se / mean(time[1:k]) < 0.025) {
@@ -81,4 +81,4 @@ for (i in seq_len(nrow(g))) {
 
 cat("DONE!\n")
 
-save_rds(g, "results/realdata.rds")
+write_rds(g, "results/realdata.rds")

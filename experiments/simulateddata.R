@@ -8,7 +8,7 @@ g <- expand_grid(
   n = 100,
   p = 50000,
   snr = c(0.1, 1, 6),
-  s = c(10),
+  s = c(5),
   screening_type = c("gap_safe", "gap_safe_lookahead"),
   path_length = c(100),
   avg_screened = NA,
@@ -18,7 +18,7 @@ g <- expand_grid(
   step = list(NA)
 )
 
-n_it <- 20
+n_it <- 50
 
 for (i in seq_len(nrow(g))) {
   screening_type <- g$screening_type[i]
@@ -57,23 +57,7 @@ for (i in seq_len(nrow(g))) {
     avg_screened[j] <- mean(fit$active / fit$screened)
     screened[j, 1:n_lambda] <- fit$screened
     active[j, 1:n_lambda] <- fit$active
-
-    # stop if standard error is within +- % of mean
-    if (j > 9) {
-      time_se <- sd(time[1:j]) / sqrt(j)
-
-      if (time_se / mean(time[1:j]) < 0.025) {
-        break
-      }
-    }
   }
-
-  time <- time[1:j]
-  active <- active[1:j, ]
-  screened <- screened[1:j, ]
-  avg_screened <- avg_screened[1:j]
-
-  dontuse <- apply(screened, 2, anyNA)
 
   active <- colMeans(active)
   screened <- colMeans(screened)
@@ -93,4 +77,4 @@ for (i in seq_len(nrow(g))) {
 #   group_by(snr, path_length, screening_type) %>%
 #   summarize(mean_time = mean(time))
 
-save_rds(g, "results/simulateddata.rds")
+write_rds(g, "results/simulateddata.rds")
