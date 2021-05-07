@@ -18,10 +18,19 @@ from: rocker/r-ver:4.0.4
     .Rbuildignore
 
 %post
+    export RENV_PATHS_CACHE="/renv/cache"
+
     # need to switch from pthreads to openmp to get right performance
     apt-get update
     apt-get install -y libopenblas-openmp-dev libopenblas0-openmp
     apt-get remove -y libopenblas-pthread-dev libopenblas0-pthread
+
+    apt-get install -y  \
+        libssl-dev \
+        libcurl4-openssl-dev \
+        libxml2-dev \
+        libpng-dev \
+        libjpeg-dev
 
     cd Project
 
@@ -38,5 +47,5 @@ from: rocker/r-ver:4.0.4
     else
         # if there's an argument, then run it and hope it's an R script
         cd /Project
-        Rscript -e "source(\"experiments/$@\")"
+        Rscript -e "source(\"$@\")"
     fi

@@ -15,4 +15,5 @@
 # modules
 module purge
 
-singularity run --bind results:/Project/results container.sif realdata.R
+singularity run --bind results:/Project/results container.sif \
+  experiments/realdata.R
