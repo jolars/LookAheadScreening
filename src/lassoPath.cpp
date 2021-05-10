@@ -23,7 +23,7 @@ lassoPath(T& X,
           const uword maxit,
           const double tol_infeas,
           const double tol_gap,
-          const bool force_kkt_check,
+          const bool check_kkt,
           const uword verbosity)
 {
   const uword n = X.n_rows;
@@ -119,8 +119,6 @@ lassoPath(T& X,
   const double null_dev = model->deviance();
   double dev = null_dev;
 
-  bool check_kkt = force_kkt_check;
-
   std::vector<double> it_times;
   std::vector<double> cd_times;
 
@@ -151,70 +149,67 @@ lassoPath(T& X,
 
     double cd_time = 0;
 
-    while (true) {
-      if (verbosity >= 1) {
-        Rprintf("  running coordinate descent\n");
-      }
-
-      double t0 = timer.toc();
-
-      // if (first_run && screening_type != "gap_safe" &&
-      //     screening_type != "gap_safe_lookahead") {
-      //   n_screened.emplace_back(sum(screened));
-      // }
-
-      uvec tmp_screened = first_run ? ever_active : screened;
-
-      auto [primal_value, dual_value, duality_gap, n_passes_i, avg_screened] =
-        model->fit(tmp_screened,
-                   X,
-                   X_norms_squared,
-                   lambda,
-                   lambda_max,
-                   null_primal,
-                   screening_type,
-                   first_run,
-                   maxit,
-                   tol_gap,
-                   tol_infeas,
-                   verbosity);
-
-      cd_time += timer.toc() - t0;
-
-      n_passes_i_sum += n_passes_i;
-
-      if (!first_run) {
-        n_screened.push_back(avg_screened);
-      }
-
-      t0 = timer.toc();
-
-      if (check_kkt && !first_run) {
-        violations.fill(false);
-        uvec check_set = find(tmp_screened == false);
-        model->updateCorrelation(X, check_set);
-        kktCheck(violations, screened, c, check_set, lambda);
-      }
-
-      n_violations_i += sum(violations);
-
-      if (!any(violations) && !first_run) {
-        duals.emplace_back(dual_value);
-        primals.emplace_back(primal_value);
-        n_passes.emplace_back(n_passes_i_sum);
-        n_refits.emplace_back(n_refits_i);
-        n_violations.emplace_back(n_violations_i);
-        cd_times.emplace_back(cd_time);
-
-        break;
-      } else {
-        n_refits_i++;
-      }
-
-      first_run = false;
-
-      Rcpp::checkUserInterrupt();
+    if (verbosity >= 1) {
+      Rprintf("  running coordinate descent\n");
     }
+
+    double t0 = timer.toc();
+
+    // ever-active warm start
+    auto [primal_value, dual_value, duality_gap, n_passes_i, avg_screened] =
+      model->fit(ever_active,
+                 X,
+                 X_norms_squared,
+                 lambda,
+                 lambda_max,
+                 null_primal,
+                 "working",
+                 true,
+                 maxit,
+                 tol_gap,
+                 tol_infeas,
+                 verbosity);
+
+    std::tie(primal_value, dual_value, duality_gap, n_passes_i, avg_screened) =
+      model->fit(screened,
+                 X,
+                 X_norms_squared,
+                 lambda,
+                 lambda_max,
+                 null_primal,
+                 screening_type,
+                 false,
+                 maxit,
+                 tol_gap,
+                 tol_infeas,
+                 verbosity);
+
+    cd_time += timer.toc() - t0;
+
+    n_passes_i_sum += n_passes_i;
+    n_screened.push_back(avg_screened);
+
+    t0 = timer.toc();
+
+    if (check_kkt) {
+      violations.fill(false);
+      const uvec check_set = find(screened == false);
+      model->updateCorrelation(X, check_set);
+      kktCheck(violations, screened, c, check_set, lambda);
+    }
+
+    n_violations_i += sum(violations);
+
+    if (any(violations)) {
+      Rcpp::stop("violations ocurred!");
+    }
+
+    duals.emplace_back(dual_value);
+    primals.emplace_back(primal_value);
+    n_passes.emplace_back(n_passes_i_sum);
+    n_refits.emplace_back(n_refits_i);
+    n_violations.emplace_back(n_violations_i);
+    cd_times.emplace_back(cd_time);
 
     if (i > 0) {
       active = beta != 0;

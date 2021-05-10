@@ -42,7 +42,7 @@ screenPredictors(uvec& lookahead,
     double residual_sq_norm2 = std::pow(norm(residual), 2);
 
     for (uword j = 0; j < p; ++j) {
-      if (ever_active(j) || lookahead(j) > step || lookahead_disabled(j))
+      if (ever_active(j) || step < lookahead(j) || screened(j))
         continue;
 
       double a = std::pow(1 - std::abs(corr(j) / dual_scale), 2) -
@@ -50,47 +50,24 @@ screenPredictors(uvec& lookahead,
       double b = X_norms_squared(j) * (theta_dot_y - beta_norm1);
       double c = -0.5 * residual_sq_norm2 * X_norms_squared(j);
 
-      double lambda_star1 = (-b + std::sqrt(b * b - 4 * a * c)) / (2 * a);
-      double lambda_star2 = (-b - std::sqrt(b * b - 4 * a * c)) / (2 * a);
+      double lambda_star = (-b + std::sqrt(b * b - 4 * a * c)) / (2 * a);
+      // double lambda_star0 = (-b - std::sqrt(b * b - 4 * a * c)) / (2 * a);
 
       // Rcpp::Rcout << "a = " << a << ", b = " << b << ", c = " << c
-      //             << ",lambda_star1: " << lambda_star1
-      //             << ", lambda_star2: " << lambda_star2 << std::endl;
+      //             << ",lambda_star: " << lambda_star
+      //             << ", lambda_star0: " << lambda_star0 << std::endl;
 
-      uvec tmp = lambdas > lambda_star1 && lambdas < lambda;
+      uvec tmp = lambdas > lambda_star && lambdas < lambda;
 
       if (any(tmp)) {
         lookahead(j) = as_scalar(find(tmp, 1, "last"));
       } else {
-        // stop considering predictors that are not captured by the rule
+        // don't consider predictors that are not discarded one-step-ahead
         lookahead(j) = 0;
         lookahead_disabled(j) = true;
       }
     }
 
-    // for (uword i = step; i < lambdas.n_elem; ++i) {
-    //   if (lambdas(i) < lambda) {
-    //     screened.ones();
-    //     screened_set = find(screened);
-
-    //     double primal_value = model->primal(lambdas(i), screened_set);
-    //     double dual_value = model->scaledDual(lambdas(i));
-    //     double duality_gap = primal_value - dual_value;
-
-    //     vec XTcenter = corr / dual_scale;
-    //     double r_screen =
-    //       model->safeScreeningRadius(std::max(duality_gap, 0.0), lambdas(i));
-
-    //     model->safeScreening(screened, screened_set, X, XTcenter, r_screen);
-
-    //     for (uword j = 0; j < X.n_cols; ++j) {
-    //       if (screened(j)) {
-    //         lookahead(j) = std::min(lookahead(j), i);
-    //       }
-    //     }
-    //   }
-    // }
-
-    screened = lookahead <= step || ever_active;
+    screened = step >= lookahead || ever_active;
   }
 }

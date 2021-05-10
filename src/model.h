@@ -161,16 +161,13 @@ public:
     const double lambda_max,
     const double null_primal,
     const std::string screening_type,
-    const bool first_run,
+    const bool warm_start,
     const uword maxit,
     const double tol_gap,
     const double tol_infeas,
     const uword verbosity)
   {
     const uword p = X.n_cols;
-
-    if (screening_type == "gap_safe" && !first_run)
-      screened.fill(true);
 
     uvec screened_set = find(screened);
 
@@ -194,7 +191,7 @@ public:
           Rprintf("    iter: %i\n", it + 1);
         }
 
-        if (it % screen_interval == 0) {
+        if (it % screen_interval == 0 && !warm_start) {
           if (it > 0) {
             updateLinearPredictor(X, screened_set);
             updateResidual();
