@@ -1,4 +1,3 @@
-
 #!/bin/sh
 
 #SBATCH -t 8:00:00
