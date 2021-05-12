@@ -17,7 +17,7 @@ test_that("screening methods work", {
                        y,
                        screening_type = screening_type,
                        verbosity = 0,
-                       force_kkt_check = TRUE)
+                       check_kkt = TRUE)
 
       steps <- 1:min(length(fit$lambda), length(fit_gap$lambda))
       expect_equal(fit_gap$dev[steps], fit$dev[steps],
