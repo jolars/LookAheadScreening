@@ -2,7 +2,6 @@
 #'
 #' @param n Number of observations
 #' @param p Number of predictors
-#' @param family Response type
 #' @param density Density of design matrix
 #' @param rho Correlation between predictors (corresponding to choice in `rho_type`)
 #' @param s Number of signals (nonzero coefficients)
@@ -44,7 +43,7 @@ generateDesign <- function(n,
   }
 
   if (density == 1) {
-    X <- matrix(rnorm(n * p), n)
+    X <- matrix(stats::rnorm(n * p), n)
   } else {
     X <- Matrix::rsparsematrix(n, p, density)
   }
