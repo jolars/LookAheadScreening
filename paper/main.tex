@@ -152,8 +152,8 @@ and \(y \in \mathbb{R}^n\) the response vector.
 The lasso is represented by the following convex optimization problem:
 \begin{equation}
   \label{eq:primal}
-  \operatorname*{minimize}_{\beta \in \mathbb{R}^p} P(\beta; \lambda)
-  = \frac 1 2 \lVert y - X\beta \rVert_2^2 + \lambda \lVert \beta \rVert_1
+  \operatorname*{minimize}_{\beta \in \mathbb{R}^p} \left\{P(\beta; \lambda)
+  = \frac 1 2 \lVert y - X\beta \rVert_2^2 + \lambda \lVert \beta \rVert_1\right\}
 \end{equation}
 where \(P(\beta;\lambda)\)
 is the \emph{primal} objective. We let \(\hat \beta_\lambda\) be the solution to
@@ -181,9 +181,9 @@ is the \emph{primal} objective. We let \(\hat \beta_\lambda\) be the solution to
 Moreover, the dual problem of \eqref{eq:primal} is
 \begin{equation}
   \label{eq:dual}
-  \operatorname*{maximize}_{\theta \in \mathbb{R}^n} D(\theta; \lambda) =
+  \operatorname*{maximize}_{\theta \in \mathbb{R}^n} \left\{ D(\theta; \lambda) =
   \frac 12 y^T y - \frac{\lambda^2}{2} \left\lVert \theta
-  - \frac y \lambda \right\rVert_2^2
+  - \frac y \lambda \right\rVert_2^2\right\}
 \end{equation}
 where \(D(\theta; \lambda)\) is the \emph{dual} objective.
 The relationship between the primal and dual problems is given by
