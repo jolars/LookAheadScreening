@@ -8,8 +8,7 @@
 #' @param maxit Maximum number of iterations for Coordinate Descent loop
 #' @param tol_infeas Tolerance threshold for maximum infeasibility
 #' @param tol_gap Tolerance threshold for duality gap
-#' @param force_kkt_check Whether to force KKT checks even when screening rule
-#'   is safe
+#' @param check_kkt Whether to force KKT checks
 #' @param verbosity Controls the level of verbosity. 0 = no output.
 #'
 #' @export
@@ -24,9 +23,8 @@ lassoPath <- function(X,
                       maxit = 1e5,
                       tol_infeas = 1e-4,
                       tol_gap = 1e-5,
-                      force_kkt_check = FALSE,
+                      check_kkt = FALSE,
                       verbosity = 0) {
-
   screening_type <- match.arg(screening_type)
 
   sparse <- inherits(X, "sparseMatrix")
@@ -46,7 +44,7 @@ lassoPath <- function(X,
       maxit,
       tol_infeas,
       tol_gap,
-      force_kkt_check,
+      check_kkt,
       verbosity
     )
   } else {
@@ -59,7 +57,7 @@ lassoPath <- function(X,
       maxit,
       tol_infeas,
       tol_gap,
-      force_kkt_check,
+      check_kkt,
       verbosity
     )
   }

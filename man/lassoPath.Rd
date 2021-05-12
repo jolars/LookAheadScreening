@@ -13,7 +13,7 @@ lassoPath(
   maxit = 1e+05,
   tol_infeas = 1e-04,
   tol_gap = 1e-05,
-  force_kkt_check = FALSE,
+  check_kkt = FALSE,
   verbosity = 0
 )
 }
@@ -34,8 +34,7 @@ lassoPath(
 
 \item{tol_gap}{Tolerance threshold for duality gap}
 
-\item{force_kkt_check}{Whether to force KKT checks even when screening rule
-is safe}
+\item{check_kkt}{Whether to force KKT checks}
 
 \item{verbosity}{Controls the level of verbosity. 0 = no output.}
 }

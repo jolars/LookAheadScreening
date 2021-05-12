@@ -316,7 +316,7 @@ lassoPathDense(arma::mat X,
                const arma::uword maxit,
                const double tol_infeas,
                const double tol_gap,
-               const bool force_kkt_check,
+               const bool check_kkt,
                const arma::uword verbosity)
 {
   return lassoPath(X,
@@ -327,7 +327,7 @@ lassoPathDense(arma::mat X,
                    maxit,
                    tol_infeas,
                    tol_gap,
-                   force_kkt_check,
+                   check_kkt,
                    verbosity);
 }
 
@@ -341,7 +341,7 @@ lassoPathSparse(arma::sp_mat X,
                 const arma::uword maxit,
                 const double tol_infeas,
                 const double tol_gap,
-                const bool force_kkt_check,
+                const bool check_kkt,
                 const arma::uword verbosity)
 {
   return lassoPath(X,
@@ -352,6 +352,6 @@ lassoPathSparse(arma::sp_mat X,
                    maxit,
                    tol_infeas,
                    tol_gap,
-                   force_kkt_check,
+                   check_kkt,
                    verbosity);
 }

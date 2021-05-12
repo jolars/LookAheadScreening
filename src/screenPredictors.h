@@ -42,7 +42,8 @@ screenPredictors(uvec& lookahead,
     double residual_sq_norm2 = std::pow(norm(residual), 2);
 
     for (uword j = 0; j < p; ++j) {
-      if (ever_active(j) || step < lookahead(j) || screened(j))
+      if (ever_active(j) || step < lookahead(j) || lookahead_disabled(j) ||
+          screened(j))
         continue;
 
       double a = std::pow(1 - std::abs(corr(j) / dual_scale), 2) -
