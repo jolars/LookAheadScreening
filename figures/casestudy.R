@@ -10,7 +10,7 @@ theme_set(theme_minimal(base_size = 9))
 d <- read_rds("results/casestudy-full.rds")
 
 pl <-
-  ggplot(d2, aes(name, rowid, fill = value)) +
+  ggplot(d, aes(name, rowid, fill = value)) +
   geom_tile(show.legend = FALSE, col = "white") +
   scale_fill_manual(values = c("grey", "steelblue4")) +
   coord_fixed() +
@@ -25,4 +25,5 @@ pl
 dev.off()
 renderPdf(file)
 
-d2 <- read_rds("results/casestudy-summary.rds")
+# d2 <- read_rds("results/casestudy-summary.rds")
+# print(d2, n = Inf)
