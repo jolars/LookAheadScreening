@@ -33,8 +33,6 @@ correlation between all predictors. \code{"auto"} means that predictors are
 \item{beta_type}{Type of coefficients to generate}
 
 \item{snr}{Signal-to-noise ratio}
-
-\item{family}{Response type}
 }
 \value{
 A list with \code{X}: the design matrix, and \code{y}: the response.
