@@ -73,7 +73,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \renewcommand{\shortauthor}{J. Larsson}
-\renewcommand{\shorttitle}{Look-Ahead Screening Rules for the Lasso}
+%\renewcommand{\shorttitle}{Look-Ahead Screening Rules for the Lasso}
 
 \title{Look-Ahead Screening Rules for the Lasso}
 
@@ -87,33 +87,19 @@
 \maketitle
 
 \begin{abstract}
-  The lasso is a popular method for inducing shrinkage and sparsity in the
-  solution vector (coefficients) of regression problems, particularly when
-  the number of predictors far outnumber the number of observations. Solving
-  the lasso for high-dimensional data can, however, be computationally
-  demanding. Fortunately, this computational load can be alleviated via the
-  use of \emph{screening rules}, which screen and discard predictors prior to
-  fitting the model, leading a reduced problem to be solved. Screening rules
-  are particularly effective when fitting a full regularization path: a
-  sequence of models with decreasing penalization. Screening rules can be
-  safe or heuristic. Safe rules certify that discarded predictors are not in
-  the solution; heuristic ones do not. Existing screening rules typically
-  work sequentially or dynamically. Sequential rules screen predictors for
-  the next model along the regularization path, whereas dynamical rules
-  screen during optimization of the current model. There has, however,
-  previously been no attempts to design screening rules that screen further
-  along the path.
-
-  In this paper, we present a new screening strategy: \emph{look-ahead}
-  screening rules. Our method uses safe screening rules to find a range of
-  penalty values for which a given predictor cannot enter the model, thereby
-  screening predictors along the remainder of the path. Our screening rules
-  lead to reductions in the time required for screening and also applies to
-  heuristic rules, for which the time required to conduct checks of the
-  optimality conditions to guard against violations of the rules is reduced.
+  The lasso is a popular method to induce shrinkage and sparsity in the
+  solution vector (coefficients) of regression problems, particularly
+  when there are many predictors relative to the number of observations. Solving
+  the lasso in this high-dimensional setting can, however, be computationally
+  demanding. Fortunately, this demand can be alleviated via the
+  use of \emph{screening rules} that discard predictors prior to
+  fitting the model, leading to a reduced problem to be solved.
+  In this paper, we present a new screening strategy: \emph{look-ahead
+    screening}. Our method uses safe screening rules to find a range of
+  penalty values for which a given predictor cannot enter the model,
+  thereby screening predictors along the remainder of the path.
   In experiments we show that these look-ahead screening rules improve the
-  performance of existing screening strategies and that the additional cost
-  of screening ahead on the path is marginal.
+  performance of existing screening strategies.
 \end{abstract}
 
 \keywords{lasso, sparse regression, screening rules, safe screening rules}
@@ -122,84 +108,102 @@
 
 \AMS{62J07}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \section{Introduction}
 
-\section{Preliminaries}%
-\label{sec:preliminaries}
+The lasso~\cite{tibshirani1996} is a staple among regression models for
+high-dimensional data. It induces shrinkage and sparsity in the solution
+vector (regression coefficients) through penalization by the
+\(\ell_1\)-norm. The optimal level of penalization is, however, usually
+unknown, which means we typically need to estimate it through model tuning
+across a grid of candidate values: the regularization path. This leads to a
+heavy computational load.
 
-Starting with the preliminaries of our problem, we take \(X \in \mathbb{R}^{n
-  \times p}\) be the design matrix of \(n\) observations and \(p\) predictors
+Thankfully, the advent of so-called \emph{screening rules} have lead to
+remarkable advances in tackling this problem. Screening rules discard a
+subset of the predictors \emph{before} fitting the model, leading to, often
+considerable, reductions in problem size. There are two types of screening
+rules: heuristic and safe rules.
+The latter kind provides a certificate that discarded predictors cannot be
+active at the optimum---that is, have a non-zero corresponding
+coefficients---whereas heuristic rules do not. In this paper, we will
+focus entirely on safe rules.
+
+A prominent type of safe rules are the Gap Safe
+rules~\citep{ndiaye2017,fercoq2015}, which use the duality gap in a problem
+to provide effective screening rules. There currently exists
+sequential versions of
+the Gap Safe rules, that discard predictors for the next step on the
+regularization path, as well as dynamic rules, which discard predictors
+during optimization at the current penalization value.
+
+The objective of this paper is to introduce a new screening strategy based
+on Gap Safe screening: \emph{look-ahead screening}, which
+screens predictors for a range of penalization parameters. We
+show that this method can be used to screen predictors for the entire
+stretch of the regularization path, leading to substantial improvements in
+the time to fit the entire lasso path.
+
+\section{Look-Ahead Screening}%
+\label{sec:look-ahead-screening}
+
+Let \(X \in \mathbb{R}^{n \times p}\) be the design matrix with \(n\)
+observations and \(p\) predictors
 and \(y \in \mathbb{R}^n\) the response vector.
-
 The lasso is represented by the following convex optimization problem:
 \begin{equation}
   \label{eq:primal}
   \operatorname*{minimize}_{\beta \in \mathbb{R}^p} P(\beta; \lambda)
+  = \frac 1 2 \lVert y - X\beta \rVert_2^2 + \lambda \lVert \beta \rVert_1
 \end{equation}
-where
-\begin{equation}
-  P(\beta; \lambda) =
-  \frac 1 2 \lVert y - X\beta \rVert_2^2 + \lambda \lVert \beta \rVert_1
-\end{equation}
+where \(P(\beta;\lambda)\)
 is the \emph{primal} objective. We let \(\hat \beta_\lambda\) be the solution to
-\eqref{eq:primal} for a given \(\lambda\). In addition, we also let \(\tilde
-\beta_\lambda\) be a numerical approximation to \(\hat\beta_\lambda\)
-returned by an algorithm
-tasked with solving \eqref{eq:primal}.
+\eqref{eq:primal} for a given \(\lambda\) and \(\tilde
+\beta_\lambda\) an estimate of \(\hat\beta_\lambda\).\footnote{Such as
+  the current estimate in an iterative solver tasked with solving
+  \eqref{eq:primal}.}
 
-The Karush--Kuhn--Tucker (KKT) stationarity condition for \eqref{eq:primal}
-holds that
-\begin{equation}
-  \label{eq:stationarity}
-  0 \in X^T(X\beta - y) + \lambda\partial,
-\end{equation}
-where \(\partial\) is the subdifferential of the \(\ell_1\)-norm, with
-its \(j\)th element corresponding to
-\begin{equation}
-  \label{eq:subdifferential}
-  \partial_j \in
-  \begin{cases}
-    \{\sign(\beta_j)\} & \text{if } \beta_j \neq 0 \\
-    [-1,1]             & \text{otherwise.}
-  \end{cases}
-\end{equation}
-Moreover, we define the dual problem of \eqref{eq:primal} as
+% The Karush--Kuhn--Tucker (KKT) stationarity condition for \eqref{eq:primal}
+% holds that
+% \begin{equation}
+%   \label{eq:stationarity}
+%   0 \in X^T(X\beta - y) + \lambda\partial,
+% \end{equation}
+% where \(\partial\) is the subdifferential of the \(\ell_1\)-norm, with
+% its \(j\)th element corresponding to
+% \begin{equation}
+%   \label{eq:subdifferential}
+%   \partial_j \in
+%   \begin{cases}
+%     \{\sign(\beta_j)\} & \text{if } \beta_j \neq 0 \\
+%     [-1,1]             & \text{otherwise.}
+%   \end{cases}
+% \end{equation}
+Moreover, the dual problem of \eqref{eq:primal} is
 \begin{equation}
   \label{eq:dual}
-  \operatorname*{maximize}_{\theta \in \mathbb{R}^n} D(\theta; \lambda)
-\end{equation}
-where
-\begin{equation}
-  D(\theta) = \frac 12 y^T y - \frac{\lambda^2}{2} \left\lVert \theta
+  \operatorname*{maximize}_{\theta \in \mathbb{R}^n} D(\theta; \lambda) =
+  \frac 12 y^T y - \frac{\lambda^2}{2} \left\lVert \theta
   - \frac y \lambda \right\rVert_2^2
 \end{equation}
-is the \emph{dual} objective.
+where \(D(\theta; \lambda)\) is the \emph{dual} objective.
 The relationship between the primal and dual problems is given by
-\[
-  y = X\hat\beta_\lambda + \lambda \hat\theta_\lambda.
-\]
-Next, we let \(G\) be the so-called \emph{duality gap}, which we define
-as
+\(y = X\hat\beta_\lambda + \lambda \hat\theta_\lambda.\)
+
+Next, we let \(G\) be the so-called \emph{duality gap}, defined as
 \begin{equation}
-  \begin{aligned}
-    G(\beta, \theta; \lambda)
-     & = P(\beta; \lambda) - D(\theta; \lambda)                                                 \\
-     & = \frac 12 \lVert y - X\beta\rVert_2^2 + \lambda \lVert \beta \rVert_1
-    - \frac 12 y^T y + \frac{\lambda^2}{2} \left\lVert \theta - \frac y \theta \right\rVert_2^2 \\
-     & =
-    \frac 12 \lVert y - X\beta\rVert_2^2 + \lambda \lVert \beta \rVert_1
-    - \lambda \theta^T y + \frac{\lambda^2}{2} \theta^T \theta.
-  \end{aligned}
+  G(\beta, \theta; \lambda)
+  = P(\beta; \lambda) - D(\theta; \lambda)
+  =
+  \frac 12 \lVert y - X\beta\rVert_2^2 + \lambda \lVert \beta \rVert_1
+  - \lambda \theta^T y + \frac{\lambda^2}{2} \theta^T \theta.
 \end{equation}
 In the case of the lasso, strong duality holds, which means that
 \(G(\tilde\beta_\lambda, \tilde\theta_\lambda; \lambda) = 0\) for any
 choice of \(\lambda\).
 
 Suppose, now, that we have solved the lasso for \(\lambda\); then
-for any given \(\lambda^* \geq \lambda\),
-the Gap Safe rule~\citep{ndiaye2017} for the lasso discards the \(j\)th
+for any given \(\lambda^* \leq \lambda\);
+the Gap Safe rule~\citep{ndiaye2017} discards the \(j\)th
 predictor if
 \begin{equation}
   \label{eq:gap-safe-rule}
@@ -211,48 +215,156 @@ predictor if
 where
 \[
   \tilde\theta_\lambda = \frac{y - X\tilde\beta_\lambda}{
-    \max\big( \max_j|x_j^T(y - X\tilde\beta_\lambda)|, \lambda\big)}
+    \max\big( |X^T(y - X\tilde\beta_\lambda)|, \lambda\big)}
 \]
-is a dual-feasible point~\cite{ndiaye2017}, which we can always obtain
-by dual scaling whenever a candidate is infeasible. Using these facts,
-we now arrive at \autoref{thm:look-ahead}, which is the main result of
-this paper.
+is a dual-feasible point~\cite{ndiaye2017} obtained through dual scaling.
 
-\begin{theorem}
-  \label{thm:look-ahead}
-  Let
-  \((\tilde\beta_\lambda,\tilde\theta_\lambda)\) be
-  a feasible primal--dual point for the solution to
-  \eqref{eq:primal} and \eqref{eq:dual}. Then
-  \(\big(\hat\beta_{\lambda^*}\big)_j = 0\) for any
-  \[
-    \lambda_* > \frac{-b + \sqrt{b^2 - 4ac}}{2a}
-  \]
-  where
-  \[
-    \begin{aligned}
-      a & = \big( 1 - | x_j^T \tilde\theta_\lambda|\big)^2 -
-      \frac 12 \tilde\theta_\lambda^T \tilde\theta_\lambda \lVert x_j\rVert_2^2      \\
-      b & = \big(\tilde\theta_\lambda^T y - \lVert \tilde\beta_\lambda \rVert_1\big)
-      \lVert x_j \rVert_2^2                                                          \\
-      c & = - \frac 12 \lVert y - X\tilde\beta_\lambda\rVert_2^2
-      \lVert x_j\rVert_2^2.                                                          \\
-    \end{aligned}
-  \]
-\end{theorem}
-\begin{proof}
-
-\end{proof}
-
-Note that there must be some \(\lambda_*^2\), for which it holds that
+Next, observe that \eqref{eq:gap-safe-rule} is a quadratic inequality with
+respect to \(\lambda_*\), which
+means that it is trivial to discover the boundary points via the
+quadratic formula:
 \[
-  |X^T \tilde \theta_\lambda|_j +
-  \lVert x_j\rVert_2 \sqrt{\frac{1}{\lambda_*^2} G(\tilde \beta_\lambda, \tilde \theta_\lambda; \lambda^*)}
-  = 1
+  \lambda_* = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
 \]
+where
+\[
+  \begin{aligned}
+    a & = \big( 1 - | x_j^T \tilde\theta_\lambda|\big)^2 -
+    \frac 12 \tilde\theta_\lambda^T \tilde\theta_\lambda \lVert x_j\rVert_2^2      \\
+    b & = \big(\tilde\theta_\lambda^T y - \lVert \tilde\beta_\lambda \rVert_1\big)
+    \lVert x_j \rVert_2^2                                                          \\
+    c & = - \frac 12 \lVert y - X\tilde\beta_\lambda\rVert_2^2
+    \lVert x_j\rVert_2^2.                                                          \\
+  \end{aligned}
+\]
+By restricting ourselves to an index \(j\) corresponding to a predictor that is
+inactive at \(\lambda\) and recalling that we have \(\lambda_* \leq \lambda\) by
+construction, we can inspect the signs of \(a\), \(b\), and \(c\) and find a
+range \(\lambda\) values for which predictor \(j\) must be inactive. Using this
+idea for the lasso path---a grid of \(\lambda\) values starting from the null
+(intercept-only) model, which corresponds to \(\lambda_\text{max} =
+\max_i|x_i^Ty|\), and finishing at fraction of this (see
+\autoref{seq:simulations} for specifics)---we can screen predictor \(j\) for all
+upcoming \(\lambda\)s, possibly discarding it for multiple steps on the path
+rather than just the next step. We call this idea \emph{look-ahead screening}.
 
-\acknowledgements{Your acknowledgements.}
+To illustrate the effectiveness of this screening method,
+we consider an instance of employing look-ahead screening for fitting
+a full lasso path to the \emph{leukemia} dataset~\citep{golub1999}.
+At the first step of
+the path, the screening method discards 99.6\% of the
+predictors for the steps up to and including
+step 5. The respective figures for steps 10 and 15 are 99.3\% and 57\%.
+At step 20, however, the
+rule does the rule not discard a single predictor.
 
+In \autoref{fig:case-study}, we have visualized the screening performance
+of look-ahead screening for a random sample of 25 predictors from this
+dataset.
+
+\begin{figure}[hbtp]
+  \centering
+  \includegraphics{figures/casestudy.pdf}
+  \caption{This figure shows the predictors screened at the first step of the
+    lasso path via look-ahead screening for a random sample of
+    20 predictors from the \emph{leukemia}
+    dataset. A blue square indicates that the corresponding predictor can
+    be discarded at the respective step.\label{fig:case-study}}
+\end{figure}
+
+As is typical for all screening methods,
+the effectiveness of look-ahead screening is strongest at the
+start of the path and diminishes as the strength of
+penalization decreases further up on the
+path. Note, however, that all of the quantities involved in the rule are
+available as a by-product of solving the problem at the previous step, which
+means that the costs of the look-ahead screening method are negligible.
+
+\section{Simulations}\label{seq:simulations}
+
+In this section, we study the effectiveness of the look-ahead screening rules by
+comparing them against the active warm start version of the Gap Safe
+rules~\citep{fercoq2015,ndiaye2017}.  We follow the recommendations in
+\citet{ndiaye2017} and run the screening procedure every tenth pass of the
+solver.
+
+Throughout the experiments, we center the response vector by its mean. In
+addition, we center and scale the predictors by their means and uncorrected
+sample standard deviations respectively.
+
+To construct
+the regularization path, we employ the standard settings from \textsf{glmnet},
+using a log-spaced path of 100 \(\lambda\) values from \(\lambda_\text{max}\)
+to \(\varepsilon \lambda_\text{max}\), where \(\varepsilon = 10^{-2}\) if
+\(p > n\) and \(10^{-4}\) otherwise. We also use the default
+path stopping criteria from \textsf{glmnet}, that is, stop the path whenever
+the deviance ratio, \(1 - \text{dev}/\text{dev}_\text{null}\),
+is greater than or equal to 0.999,
+the fractional increase in deviance explained is lower than
+\(10^{-5}\), or, if \(p \geq n\),
+when the number of active predictors exceeds or is equal to
+\(n\).
+
+To fit the lasso, we
+use cyclical coordinate descent~\cite{friedman2010}.
+We consider the solver to have converged whenever
+the duality gap as a fraction of the primal value
+for the null model is less than or equal to \(10^{-6}\) and the amount of
+\emph{infeasibility}, which we define as \(\max_i\big( |c_i| -
+\lambda\big)\), as a fraction of \(\lambda_\text{max}\) is lower than or
+equal to \(10^{-5}\).
+
+The code used in these experiments is programmed in \textsf{C++}.
+We use a combination of the \textsf{renv} R
+package and Singularity to set up a
+reproducible environment for the experiments. All
+source code
+can be found at \url{https://github.com/jolars/LookAheadScreening/}. An HPC
+cluster node with two Intel Xeon E5-2650 v3 processors (Haswell, 20 compute
+cores per node) and 64 GB of RAM was used to run the experiments.
+
+We
+run experiments on a design with \(n = 100\) and \(p = 50\,000\),
+drawing the rows of \(X\) i.i.d.
+from \(\mathcal{N}(0, \Sigma)\) and \(y\)
+from \(\mathcal{N}(X\beta, \sigma^2I)\) with \(\sigma^2 =
+\beta^T\Sigma\beta/\text{SNR}\), where SNR is the signal-to-noise ratio.  We set
+\(5\) coefficients, equally spaced throughout the coefficient vector, to 1 and
+the rest to zero. Taking inspriation from \citet{hastie2020}, we
+consider SNR values of 0.1, 1, and 6.
+
+Judging by the results~(\autoref{fig:simulated-data}), the addition of
+look-ahead screening results in sizable reductions in the solving time of
+the lasso path, particularly in the high signal-to-noise context.
+
+\begin{figure}[hbtp]
+  \centering
+  \includegraphics{figures/simulateddata-timings.pdf}
+  \caption{Standard box plots of timings to fit a full lasso path to
+    a simulated dataset with \(n = 100\), \(p = 50\,000\), and five true
+    signals.}
+  \label{fig:simulated-data}
+\end{figure}
+
+\section{Discussion}
+
+In this paper, we have presented \emph{look-ahead screening}, which is a
+novel method to screen predictors for a range of penalization values along
+the lasso regularization path using Gap Safe screening. Our results show that
+this type of screening can yield considerable improvements in performance.
+
+The idea is general and can therefore be extended to any type of safe screening
+rule and also used in tandem with heuristic screening rules in order to avoid
+expensive KKT computations.
+
+\acknowledgements{
+  I would like to thank my supervisor, Jonas Wallin, for valuable feedback
+  on this work.
+
+  The computations were enabled by resources provided by the Swedish
+  National Infrastructure for Computing (SNIC) at LUNARC partially funded
+  by the Swedish Research Council through grant agreement no. 2017-05973.
+}
 \bibliography{LookAheadScreening.bib}
 
 \end{document}
