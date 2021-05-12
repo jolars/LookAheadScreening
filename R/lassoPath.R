@@ -33,7 +33,7 @@ lassoPath <- function(X,
   p <- ncol(X)
 
   if (sparse) {
-    X <- as(X, "dgCMatrix")
+    X <- methods::as(X, "dgCMatrix")
 
     lassoPathSparse(
       X,
