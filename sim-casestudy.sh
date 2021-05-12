@@ -1,3 +1,4 @@
+
 #!/bin/sh
 
 #SBATCH -t 8:00:00
@@ -6,9 +7,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH -A lu2021-2-77
 
-#SBATCH -J simulateddata
-#SBATCH -o simulateddata_%j.out
-#SBATCH -e simulateddata_%j.err
+#SBATCH -J casestudy
+#SBATCH -o casestudy_%j.out
+#SBATCH -e casestudy_%j.err
 
 #SBATCH -N 1
 #SBATCH --tasks-per-node=20
@@ -17,4 +18,4 @@
 module purge
 
 singularity run --bind results:/Project/results container.sif \
-  experiments/simulateddata.R
+  experiments/casestudy.R
