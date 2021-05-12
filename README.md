@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Code for the Hessian Screening Rule
+# Code for *Look-Ahead Screening Rules for the Lasso*
 
 <!-- badges: start -->
 
