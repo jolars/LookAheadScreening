@@ -5,12 +5,13 @@ library(forcats)
 library(tikzDevice)
 library(ggplot2)
 library(readr)
+library(here)
 
-source("R/utils.R")
+source(here("R", "utils.R"))
 
 theme_set(theme_minimal(base_size = 9))
 
-d1 <- read_rds("results/simulateddata.rds") %>%
+d1 <- read_rds(here("results", "simulateddata.rds")) %>%
   select(-(screened:step)) %>%
   unnest(time) %>%
   mutate(
@@ -27,8 +28,8 @@ cols <- c(
   "#0072B2", "#D55E00", "#CC79A7"
 )
 
-file <- "paper/figures/simulateddata-timings.tex"
-tikz(file, width = 4.5, height = 2, standAlone = TRUE)
+file <- here("paper", "figures", "simulated-data-timings.tex")
+tikz(file, width = 4.5, height = 1.8, standAlone = TRUE)
 ggplot(d1, aes(
   snr,
   time,
@@ -39,4 +40,4 @@ ggplot(d1, aes(
   labs(fill = NULL, x = "Signal-to-Noise Ratio", y = "Time (s)")
 dev.off()
 
-renderPdf("paper/figures/simulateddata-timings.tex")
+renderPdf(file)

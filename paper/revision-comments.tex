@@ -1,0 +1,132 @@
+\PassOptionsToPackage{unicode,pdfusetitle}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+
+\documentclass[english,a4paper]{article}
+
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath,amsthm,mathtools,isomath}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp} % provide euro and other symbols
+\usepackage{babel}
+
+\usepackage{upquote} % straight quotes in verbatim environments
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+
+\usepackage{xcolor}
+\usepackage{xurl}
+\usepackage{bookmark}
+\usepackage{csquotes}
+
+\usepackage{listings}
+
+\lstset{
+  basicstyle=\ttfamily, % print whole listing small
+  %keywordstyle=\color{black}\bfseries\underbar, % underlined bold black keywords
+  %commentstyle=\color{grey}, % white comments
+  keepspaces = true % no special string spaces
+}
+
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=Maroon,
+  filecolor=Maroon,
+  citecolor=Blue,
+  urlcolor=Blue
+}
+
+\usepackage{longtable,booktabs}
+
+\usepackage{etoolbox}
+
+% nice tables out of csv files
+\usepackage{csvsimple}
+
+% format units nicely
+\usepackage{siunitx}
+
+% Allow footnotes in longtable head/foot
+\usepackage{footnotehyper}
+\makesavenoteenv{longtable}
+
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+% tikz and pgfplots
+\usepackage{pgfplots}
+\pgfplotsset{width=7cm,compat=1.16}
+\usepgfplotslibrary{external}
+\tikzexternalize
+
+\usepackage{pdfpages}
+
+% algorithms
+\usepackage{algorithm,algpseudocode}
+
+% bibliography
+\makeatletter
+\def\blx@nowarnpolyglossia{}
+\makeatother
+\usepackage[style=alphabetic,backend=biber,sorting=anyt]{biblatex}
+% \addbibresource{}
+
+% \setlength{\emergencystretch}{3em} % prevent overfull lines
+
+% nice author blocks
+\usepackage[]{authblk}
+\renewcommand\Affilfont{\itshape\small}
+
+% title block
+\title{Response to Referee}
+
+\author{Johan Larsson}
+\affil{The Department of Statistics, Lund University}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\noindent I would like to begin by thanking the referee for their valuable and insightful
+comments on the paper. Here, I will outline all edits made to the paper based on
+their comments, as well as any other changes to the paper.
+
+\begin{displayquote}
+  However, in Section 3, just one method (active warm start version of the Gap
+  Safe rules) is used to compare the performance of the proposed strategy. The
+  author should rephrase the last sentence of the abstract accordingly, e.g.:
+  ``In experiments we show that these look-ahead screening rules outperform the
+  active warm start version of the Gap Safe rules.''
+\end{displayquote}
+The last sentence of the abstract has been modified accordingly. 
+
+\begin{displayquote}
+  Only the Gaussian case is considered. Is the method applicable to Generalized
+  Linear Models?
+\end{displayquote}
+We have added a couple of sentences in the discussion discussing this.
+
+\begin{displayquote}
+  There are two options in the glmnet package for computing the path to Gaussian
+  linear models: \texttt{type.gaussian="covariance"} and \texttt{type.gaussian="naive"}.
+  Depending on the setting, these options have a large impact on timing. The
+  latter can be far more efficient for p > n situations, or when p > 500. Are
+  the results reported in simulations consistent under both settings?
+\end{displayquote}
+A sentence in the discussion has been added regarding this.
+
+In addition to these changes, we have also replaced \(\tilde\beta\)
+throughout the paper with \(\beta\), since the distinction made with the former
+notation made no difference to the results.
+ 
+We have moreover hade a few minor cosmetic changes to math environments,
+figures, and text in order to maintain the page limit requirement. The
+description of the experiment setup was also shortened somewhat for the same
+reason.
+
+\end{document}
