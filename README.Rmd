@@ -21,9 +21,8 @@ knitr::opts_chunk$set(
 
 The results from the simulations, which were run
 on a dedicated HPC cluster, are stored in the [results folder](results/).
-The figures
-in the paper, generated from these results, are stored
-in [`figures/`](figures/).
+The source code for the actual paper, including figures,
+is found in [`paper/`](paper/).
 
 ## Reproducing the Results
 
@@ -103,3 +102,4 @@ ensure, however, that you have enabled the renv project library by calling
 The datasets used in these simulations are stored in the [data folder](data/).
 Scripts to retrieve these datasets from their original
 sources can be found in [`data-raw/`](data-raw/).
+
