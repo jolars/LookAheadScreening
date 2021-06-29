@@ -182,11 +182,10 @@ In the case of the lasso, strong duality holds, which means that
 choice of \(\lambda\).
 
 Suppose, now, that we have solved the lasso for \(\lambda\); then
-for any given \(\lambda^* \leq \lambda\);
+for any given \(\lambda^* \leq \lambda\),
 the Gap Safe rule~\citep{ndiaye2017} discards the \(j\)th
 predictor if
-\begin{equation}
-  \label{eq:gap-safe-rule}
+\begin{equation} \label{eq:gap-safe-rule}
   |X^T \theta_\lambda|_j + \lVert x_j\rVert_2
   \sqrt{\frac{1}{\lambda_*^2}
     G(\beta_\lambda, \theta_\lambda; \lambda^*)}
@@ -305,7 +304,7 @@ the lasso path, particularly in the high signal-to-noise context.
 
 \begin{figure}[hbtp]
   \centering
-  \includegraphics{figures/simulateddata-timings.pdf}
+  \includegraphics{figures/simulated-data-timings.pdf}
   \caption{Standard box plots of timings to fit a full lasso path to
     a simulated data set with \(n = 100\), \(p = 50\,000\), and five true
     signals.}
@@ -327,10 +326,11 @@ in comparable results.
 
 Moreover, the idea is general and can therefore be extended to any type of safe
 screening rule and also used in tandem with heuristic screening rules in order
-to avoid expensive KKT computations. Finally, although we only cover one type of
-solver in our experiments, note that our screening method is
-agnostic to the solver used to solve the lasso and that we therefore expect our
-results to be generalizable.
+to avoid expensive KKT computations. Finally, although we only cover one type
+of cyclical
+coordinate descent in our experiments, note that our screening method is
+agnostic to the solver used and that we expect the results
+hold for any solver that benefits from predictor screening.
 
 \acknowledgements{
   I would like to thank my supervisor, Jonas Wallin, for valuable feedback
